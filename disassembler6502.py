@@ -12,6 +12,10 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--simple", help="outputs one instruction per line",
                     action="store_true")
+                    
+parser.add_argument("-r", "--routine", help="just look at subroutine at address",
+                    type=int)
+                                        
 parser.add_argument('binpath', nargs=1, default=[], help='path to binary to disassemble')
 
 args = parser.parse_args()
@@ -46,7 +50,7 @@ if __name__ == "__main__":
     
     print "Loading file", "0x{0:0000X}".format(len(bindata)), "bytes" 
     
-    
+    subroutines = []
     
     #Figure out the Reset vectors and NMI vectors...
     mem = Memory(0x8000) # 32K
@@ -60,11 +64,19 @@ if __name__ == "__main__":
     
     disAddr = rstAddr
     
-    for x in xrange(60000): #decode the first 10 opcodes?
-        originalAddr =  disAddr + absoluteOffset
+    startOffset = 0
+    routineOffset = 0
+    if args.routine:
+        startOffset = args.routine - absoluteOffset
+        routineOffset = startOffset
+        print "start offset", startOffset
+    
+    for x in xrange(startOffset, 60000): #decode the first 10 opcodes?
+        originalAddr =  disAddr + absoluteOffset + routineOffset
         binIns = mem[disAddr]
         disAddr +=1
         sbinIns = chr(binIns)
+        
         #print "Address:      0x{0:04X}".format(originalAddr)
         
         if sbinIns not in OpCodes.keys():
@@ -133,4 +145,8 @@ if __name__ == "__main__":
             print sMemType
             print 
         
+        #If we are printing out a subroutine, stop priting if we get a return op code.
+        if args.routine:
+            if op == OP_RTS or opStr == OP_RTI:
+                break
     
