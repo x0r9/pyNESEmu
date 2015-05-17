@@ -97,10 +97,10 @@ class Disassembler(object):
         ti = self.GetMemLoc(location)
         
         
-    def Walk(self, address):
+    def Walk(self, address, limit=0):
         currentAddress = address
         i = 0
-        while i < 256:
+        while i < limit or limit == 0:
             #print "get b",     currentAddress        
             b = self.GetBytesAt(currentAddress)
             opDecode = Disassemble(b)

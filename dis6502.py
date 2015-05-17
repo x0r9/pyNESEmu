@@ -9,15 +9,21 @@ import sys
 from CPU6502Reverse import *
 import argparse
 
+def auto_int(x):
+    return int(x,0)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--simple", help="outputs one instruction per line",
                     action="store_true")
                     
 parser.add_argument("-r", "--routine", help="just look at subroutine at address",
-                    type=int)
+                    type=auto_int)
 
 parser.add_argument("-Rs", "--refsub", help="find all references to subroutine address",
-                    type=int)
+                    type=auto_int)
+
+parser.add_argument("-l", "--length", help="limit number of bytes to crawl",
+                    type=auto_int)
 
 parser.add_argument("-V", "--vectors", help="print vector addresses",
                      action="store_true")
@@ -79,8 +85,13 @@ if __name__ == "__main__":
         routineOffset = startOffset
         print "start offset", startOffset
     
+    if args.length:
+        limit = args.length
+    else:
+        limit = 0
+    
     # Disasemble 
-    for d in dis.Walk(absoluteOffset):
+    for d in dis.Walk(absoluteOffset, limit):
     
         #print d
         
