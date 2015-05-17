@@ -35,7 +35,21 @@ class DisOpCode(object):
             sMemType += " (0x{0:02X})".format(self.OpArg) 
         elif self.MemType == MEM_ABSOLUTE_X or self.MemType == MEM_ABSOLUTE_Y:
             sMemType += " (0x{0:04X})".format(self.OpArg) 
-        return sMemType    
+        return sMemType 
+    def GetMemPointer(self):
+        if self.MemType == MEM_ABSOLUTE:
+            return  self.OpArg
+        if  self.MemType == MEM_RELATIVE:
+            p = self.OpArg
+            #print "{0:02X}".format(p)
+            if self.OpArg&0x80:
+                #print "neg"
+                p = -((self.OpArg^0xFF)+1) + self.OpLength
+            return self.MemAddress+p
+        if self.MemType == MEM_IMMEDIATE:
+            return self.OpArg
+            
+        
 def Disassemble(bin):
     """
     Attempt to decode binary, and return tuple with:
@@ -111,10 +125,38 @@ class Disassembler(object):
             nudge = 1
             if align:
                 nudge = opDecode.OpLength
+                
             i += nudge
             currentAddress += nudge
-   
                 
             yield opDecode
         
+class MemHints(object):
+    TYPE_REG = 3
+    TYPE_SUB = 1
+    TYPE_MEM = 2
     
+    TypeLookUp = { "reg" : TYPE_REG ,
+                "sub": TYPE_SUB,
+                "mem": TYPE_MEM }
+        
+    def __init__(self):
+        self.map = {}
+        
+    def LoadFile(self, path):
+        f = open(path, "r")
+        for l in f:
+            l = l.strip()
+            p = l.split(",")
+            if len(p)  < 3:
+                continue
+            
+            addr = int(p[0], 0)
+            mtype = self.TypeLookUp[p[1]]
+            comment = p[2]
+            
+            self.map[addr] = (mtype, comment)
+    def GetHintAtAddr(self, addr):
+        if not addr in self.map.keys():
+            return None
+        return self.map[addr]  

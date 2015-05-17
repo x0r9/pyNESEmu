@@ -27,6 +27,9 @@ parser.add_argument("-l", "--length", help="limit number of bytes to crawl",
 
 parser.add_argument("-V", "--vectors", help="print vector addresses",
                      action="store_true")
+
+parser.add_argument("-M", "--memmap", help="file for memory map, print hints on assembler",
+                     )
                                         
 parser.add_argument('binpath', nargs=1, default=[], help='path to binary to disassemble')
 
@@ -52,6 +55,9 @@ def getVector(name, rom, address):
     #return vecAddr
     return vecVal
 
+
+
+
 if __name__ == "__main__":
     print "Disassembler6502"
     
@@ -67,6 +73,11 @@ if __name__ == "__main__":
     #Figure out the Reset vectors and NMI vectors...
     mem = Memory(0x8000) # 32K
     mem.InitWithString(bindata)
+    
+    #load in mem hints
+    memhints = MemHints()
+    if args.memmap:
+        memhints.LoadFile(args.memmap)
     
     dis = Disassembler()
     dis.LoadBinary(bindata)
@@ -99,12 +110,27 @@ if __name__ == "__main__":
         
         if args.refsub and d.OpCode != OP_JSR:
             continue
-        elif d.OpArg != args.refsub:
+        elif args.refsub and d.OpArg != args.refsub:
             continue
+        
+        #check for a memhint
+        mhAtAddr = memhints.GetHintAtAddr(d.MemAddress)
+        mhAtArgAddr = d.GetMemPointer()
+        mhAtArg = None
+        if mhAtArgAddr != None:
+            mhAtArg = memhints.GetHintAtAddr(mhAtArgAddr)
+            
+        hintLine = ""
+        if  mhAtAddr:
+            hintLine += "At - "+   mhAtAddr[1]+ " "
+        if mhAtArg:
+            hintLine += "Ptr - "+ mhAtArg[1]
         
         if args.simple:
             #print "s"
             sLine = "0x{0:04X} {1:4}".format(d.MemAddress, d.OpCodeString())+"  "+d.MemTypeString()
+            if len(hintLine) > 0:
+                sLine += " ; "+hintLine
             print sLine
             
         else:
@@ -115,9 +141,11 @@ if __name__ == "__main__":
             print "OpCode Long:  {0}".format(d.OpCodeLongString())
             print "OpCode Len:   {0}".format(d.OpLength)
             print d.MemTypeString() #sMemType
+            if len(hintLine) > 0:
+                print "Hint:            "+hintLine
             print 
             
-        #If we are printing out a subroutine, stop priting if we get a return op code.
+        #If we are printing out a subroutine, stop printing if we get a return op code.
         if args.routine:
             if d.OpCode == OP_RTS or d.OpCode == OP_RTI:
                 break    
