@@ -497,8 +497,15 @@ OpCodes["\x9A"] = (OP_TXS,  MEM_IMPLICIT,       1,  2,  False)
 OpCodes["\x98"] = (OP_TYA,  MEM_IMPLICIT,       1,  2,  False)
 
 def BinToHexString(s):
-    return "".join( "%02X"%ord(b) for b in s)
-
+    if type(s) != list:
+        s = [s]
+    if len(s) == 0:
+        return ""
+    if type( s[0] ) == str:
+        return "".join( "%02X"%ord(b) for b in s)
+    else:
+        return "".join( "%02X"%b for b in s)
+        
 class Memory(object):
     def __init__(self, size):
         self.data = [Register() for x in xrange(size)]
@@ -508,6 +515,8 @@ class Memory(object):
             self.data[n].V = ord(string[n])
         
     def __getitem__(self, addr): 
+        if type(addr) == slice:
+            return [x.V for x in self.data[addr] ]
         return self.data[addr].V   
     def __setitem__(self, addr, val):
         self.data[addr].V = val

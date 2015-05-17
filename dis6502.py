@@ -79,6 +79,28 @@ if __name__ == "__main__":
         routineOffset = startOffset
         print "start offset", startOffset
     
+    # Disasemble 
+    for d in dis.Walk(absoluteOffset):
+    
+        #print d
+        
+        if args.simple:
+            #print "s"
+            sLine = "0x{0:04X} {1:4}".format(d.MemAddress, d.OpCodeString())+"  "+d.MemTypeString()
+            print sLine
+            
+        else:
+            print "ns"
+            print "Address:      0x{0:04X}".format(d.MemAddress)
+            print "Whole Op:     0x"+BinToHexString(d.WholeOpCode)
+            print "OpCode:       {0}".format(d.OpCodeString())
+            print "OpCode Long:  {0}".format(d.OpCodeLongString())
+            print "OpCode Len:   {0}".format(d.OpLength)
+            print d.MemTypeString() #sMemType
+            print 
+            
+    sys.exit()
+    
     
     for x in xrange(startOffset, 60000): #decode the first 10 opcodes?
         originalAddr =  disAddr + absoluteOffset + routineOffset
