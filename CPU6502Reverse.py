@@ -97,7 +97,7 @@ class Disassembler(object):
         ti = self.GetMemLoc(location)
         
         
-    def Walk(self, address, limit=0):
+    def Walk(self, address, limit=0, align=True):
         currentAddress = address
         i = 0
         while i < limit or limit == 0:
@@ -107,8 +107,14 @@ class Disassembler(object):
            
             opDecode.MemAddress = currentAddress
             opDecode.WholeOpCode = b[:opDecode.OpLength]
-            i += opDecode.OpLength
-            currentAddress += opDecode.OpLength
+            
+            nudge = 1
+            if align:
+                nudge = opDecode.OpLength
+            i += nudge
+            currentAddress += nudge
+   
+                
             yield opDecode
         
     

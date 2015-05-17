@@ -78,22 +78,29 @@ if __name__ == "__main__":
         print "IRQ {0:0000X}".format(dis.GetVector(0xFFFE))
         sys.exit()
     
-    startOffset = 0
-    routineOffset = 0
+    startDisFrom = absoluteOffset
     if args.routine:
-        startOffset = args.routine - absoluteOffset
-        routineOffset = startOffset
-        print "start offset", startOffset
+        startDisFrom = args.routine
     
     if args.length:
         limit = args.length
     else:
         limit = 0
     
+    walkAlign = True
+    if args.refsub:
+        #Walk the binary, but try and find where there are jumps to the address
+        walkAlign = False
+    
     # Disasemble 
-    for d in dis.Walk(absoluteOffset, limit):
+    for d in dis.Walk(startDisFrom, limit, walkAlign):
     
         #print d
+        
+        if args.refsub and d.OpCode != OP_JSR:
+            continue
+        elif d.OpArg != args.refsub:
+            continue
         
         if args.simple:
             #print "s"
@@ -110,103 +117,14 @@ if __name__ == "__main__":
             print d.MemTypeString() #sMemType
             print 
             
+        #If we are printing out a subroutine, stop priting if we get a return op code.
+        if args.routine:
+            if d.OpCode == OP_RTS or d.OpCode == OP_RTI:
+                break    
+            
     sys.exit()
     
     
-    for x in xrange(startOffset, 60000): #decode the first 10 opcodes?
-        originalAddr =  disAddr + absoluteOffset + routineOffset
-        binIns = mem[disAddr]
-        disAddr +=1
-        sbinIns = chr(binIns)
-        
-        #print "Address:      0x{0:04X}".format(originalAddr)
-        
-        if sbinIns not in OpCodes.keys():
-            #print "BinIns: 0x{0:02X}".format(binIns)
-            #print "Unrecognised OpCode!"
-            #break
-            op, memtype, oplength, opclk, extraClockOnPageChange = OP_UNKOWN, MEM_IMPLICIT, 1, 1, 1
-        else:    
-            op, memtype, oplength, opclk, extraClockOnPageChange = OpCodes[sbinIns]
-        
-        #load in full op code and know how much to offset disAdd
-        disAddrAdd = 0
-        lengthRem = oplength-1
-        while lengthRem > 0:
-            lengthRem -= 1
-            sbinIns += chr(mem[disAddr])
-            disAddrAdd += 1
-            #disAddr += 1 
-            
-        opArg = 0
-        if oplength > 1:
-            opArg += ord(sbinIns[1])
-        if oplength > 2:
-            opArg += ord(sbinIns[2]) << 8 
-              
-        if args.refsub:
-            
-            if op == OP_JSR:
-                if memtype == MEM_ABSOLUTE and opArg == args.refsub:
-                    print "found"       
-            continue
-        
-        #Load Full Opcode + increment Address
-        disAddr += disAddrAdd
-        
-        opStr = OpToString[op]
-        opStrLong = OpToLongString[op]
-       
-        opArg = 0
-        if oplength > 1:
-            opArg += ord(sbinIns[1])
-        if oplength > 2:
-            opArg += ord(sbinIns[2]) << 8   
-       
-        #print "Whole Op:     0x"+BinToHexString(sbinIns)
-        #print "OpCode:       {0}".format(opStr)
-        #print "OpCode Long:  {0}".format(opStrLong)
-        #print "OpCode Len:   {0}".format(oplength)
-        sMemType =  "MemType:      "+MemTypeToString[memtype]
-        
-        
-        #Attempt to work out where we are trying to branch to?
-        sMemType =  "MemType:      "+MemTypeToString[memtype]
-        if memtype == MEM_ABSOLUTE:
-            sMemType += " (0x{0:04X})".format(opArg)   
-        elif memtype == MEM_RELATIVE:
-            p = opArg
-            #print "{0:02X}".format(p)
-            if opArg&0x80:
-                #print "neg"
-                p = -((opArg^0xFF)+1) + oplength
-            addr = originalAddr+p
-            sMemType += " (0x{0:04X})".format(addr)
-        elif memtype == MEM_IMMEDIATE:
-            sMemType += " (0x{0:02X})".format(opArg) 
-        elif memtype == MEM_ABSOLUTE_X or memtype == MEM_ABSOLUTE_Y:
-            sMemType += " (0x{0:04X})".format(opArg) 
-        #print sMemType
-        #print 
-        
-        #print the output here...
-        if args.simple:
-            #print "s"
-            sLine = "0x{0:04X} {1:4}".format(originalAddr, opStr)+"  "+sMemType
-            print sLine
-            
-        else:
-            print "ns"
-            print "Address:      0x{0:04X}".format(originalAddr)
-            print "Whole Op:     0x"+BinToHexString(sbinIns)
-            print "OpCode:       {0}".format(opStr)
-            print "OpCode Long:  {0}".format(opStrLong)
-            print "OpCode Len:   {0}".format(oplength)
-            print sMemType
-            print 
-        
-        #If we are printing out a subroutine, stop priting if we get a return op code.
-        if args.routine:
-            if op == OP_RTS or opStr == OP_RTI:
-                break
+   
+    
     
