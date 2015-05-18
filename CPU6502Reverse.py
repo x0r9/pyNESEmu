@@ -35,6 +35,8 @@ class DisOpCode(object):
             sMemType += " (0x{0:02X})".format(self.OpArg) 
         elif self.MemType == MEM_ABSOLUTE_X or self.MemType == MEM_ABSOLUTE_Y:
             sMemType += " (0x{0:04X})".format(self.OpArg) 
+        elif self.MemType == MEM_ZEROPAGE:
+            sMemType += " (0x{0:04X})".format(self.OpArg) 
         return sMemType 
     def GetMemPointer(self):
         if self.MemType == MEM_ABSOLUTE:
@@ -48,7 +50,8 @@ class DisOpCode(object):
             return self.MemAddress+p
         if self.MemType == MEM_IMMEDIATE:
             return self.OpArg
-            
+        if self.MemType == MEM_ZEROPAGE:
+            return self.OpArg
         
 def Disassemble(bin):
     """
