@@ -15,6 +15,9 @@ parser.add_argument("-s", "--simple", help="outputs one instruction per line",
                     
 parser.add_argument("-r", "--routine", help="just look at subroutine at address",
                     type=int)
+
+parser.add_argument("-Rs", "--refsub", help="find all references to subroutine address",
+                    type=int)
                                         
 parser.add_argument('binpath', nargs=1, default=[], help='path to binary to disassemble')
 
@@ -71,6 +74,7 @@ if __name__ == "__main__":
         routineOffset = startOffset
         print "start offset", startOffset
     
+    
     for x in xrange(startOffset, 60000): #decode the first 10 opcodes?
         originalAddr =  disAddr + absoluteOffset + routineOffset
         binIns = mem[disAddr]
@@ -87,12 +91,30 @@ if __name__ == "__main__":
         else:    
             op, memtype, oplength, opclk, extraClockOnPageChange = OpCodes[sbinIns]
         
-        #Load Full Opcode + increment Address
+        #load in full op code and know how much to offset disAdd
+        disAddrAdd = 0
         lengthRem = oplength-1
         while lengthRem > 0:
             lengthRem -= 1
             sbinIns += chr(mem[disAddr])
-            disAddr += 1 
+            disAddrAdd += 1
+            #disAddr += 1 
+            
+        opArg = 0
+        if oplength > 1:
+            opArg += ord(sbinIns[1])
+        if oplength > 2:
+            opArg += ord(sbinIns[2]) << 8 
+              
+        if args.refsub:
+            
+            if op == OP_JSR:
+                if memtype == MEM_ABSOLUTE and opArg == args.refsub:
+                    print "found"       
+            continue
+        
+        #Load Full Opcode + increment Address
+        disAddr += disAddrAdd
         
         opStr = OpToString[op]
         opStrLong = OpToLongString[op]
