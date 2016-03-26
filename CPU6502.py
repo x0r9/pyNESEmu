@@ -497,12 +497,18 @@ OpCodes["\x9A"] = (OP_TXS,  MEM_IMPLICIT,       1,  2,  False)
 OpCodes["\x98"] = (OP_TYA,  MEM_IMPLICIT,       1,  2,  False)
 
 def BinToHexString(s):
+    """
+    Convert a sttring of binary values into a Hex representation
+    e.g. "\x03|Z1" outputs "037C5A31"
+    """
     if type(s) != list:
         s = [s]
     if len(s) == 0:
         return ""
-    if type( s[0] ) == str:
+    if type( s[0] ) == str and len(s[0]) == 1: ## Assuming each item is a byte?
         return "".join( "%02X"%ord(b) for b in s)
+    elif type(s[0] ) == str and len(s) == 1: ## We just made a list
+        return "".join( "%02X"%ord(b) for b in s[0])
     else:
         return "".join( "%02X"%b for b in s)
         
@@ -796,7 +802,7 @@ class CPU6502(object):
             memstring += "{0:6}".format(BinToHexString( struct.pack(">H", memVal) ))  
 
         s = "{0:6} - {1:10} - {2:4} - {3:14}".format(
-            BinToHexString( struct.pack(">H", instructionAddress) ),
+            BinToHexString(  struct.pack(">H", instructionAddress) ),
             BinToHexString(ins),
             OpToString[op],
             MemTypeToString[memtype]
