@@ -127,6 +127,16 @@ if __name__ == "__main__":
                     print "invalid args"
                 else:
                     nese.membus.addMask(addr, mask, value)
+        if uinputp[0] == "jmp":
+            if len(uinputp) < 2:
+                print "jmp [addr]"
+            else:
+                # Set instruction pointer to given address.
+                addr = parseaddress(uinputp[1])
+                if addr is None:
+                    print "invalid args"
+                else:
+                    nese.cpu.pCnt.V = addr
         if uinputp[0] == "r":
             if len(uinputp) < 2:
                 print "r [reg/addrs]"
