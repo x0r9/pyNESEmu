@@ -52,7 +52,22 @@ class DisOpCode(object):
             return self.OpArg
         if self.MemType == MEM_ZEROPAGE:
             return self.OpArg
-        
+
+
+def PeakAtOpCode(bin):
+    """
+
+    :param bin: str of one character
+    :return: tuple of operation and length and memtype mode
+    """
+
+    sbinIns = bin[0]
+    if sbinIns in OpCodes.keys():
+        op, memtype, oplength, opclk, extraClockOnPageChange = OpCodes[sbinIns]
+        return op, oplength, memtype
+    else:
+        return -1,-1,-1
+
 def Disassemble(bin):
     """
     Attempt to decode binary, and return tuple with:
@@ -113,7 +128,12 @@ class Disassembler(object):
     def DecodeAtAddress(self, address):
         ti = self.GetMemLoc(location)
         
-        
+
+    def ReadOpCode(self, data):
+        b = data[0]
+        opDecode = Disassemble(b)
+
+
     def Walk(self, address, limit=0, align=True):
         currentAddress = address
         i = 0

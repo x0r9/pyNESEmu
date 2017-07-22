@@ -7,6 +7,7 @@ games and figuring out if my Emulator is working right?
 
 import sys
 from CPU6502Reverse import *
+import CPU6502
 import argparse
 
 def auto_int(x):
@@ -30,7 +31,10 @@ parser.add_argument("-V", "--vectors", help="print vector addresses",
 
 parser.add_argument("-M", "--memmap", help="file for memory map, print hints on assembler",
                      )
-                                        
+
+parser.add_argument("-X", "--hex", help="Decode a instruction with supplied Hex data",
+                    type=auto_int)
+                                                            
 parser.add_argument('binpath', nargs=1, default=[], help='path to binary to disassemble')
 
 args = parser.parse_args()
@@ -55,8 +59,13 @@ def getVector(name, rom, address):
     #return vecAddr
     return vecVal
 
-
-
+def convertIntToBinString( num ):
+    result = ""
+    while num > 256:
+      result += chr(num%256)
+      num = num/256
+    result =  chr(num%256)
+    return result
 
 if __name__ == "__main__":
     print "Disassembler6502"
@@ -70,17 +79,26 @@ if __name__ == "__main__":
     
     subroutines = []
     
-    #Figure out the Reset vectors and NMI vectors...
+    # Figure out the Reset vectors and NMI vectors...
     mem = Memory(0x8000) # 32K
     mem.InitWithString(bindata)
     
-    #load in mem hints
+    # load in mem hints
     memhints = MemHints()
     if args.memmap:
         memhints.LoadFile(args.memmap)
     
     dis = Disassembler()
     dis.LoadBinary(bindata)
+   
+    if args.hex is not None:
+        print "Decode Single"
+        print "Instruction"
+        singlebin = convertIntToBinString(args.hex)
+        print "0x"+CPU6502.BinToHexString(singlebin)
+        op, oplength, memtype = PeakAtOpCode(singlebin[0])
+        print op, oplength, memtype
+        sys.exit()
    
     if args.vectors:
         print "Vectors:"

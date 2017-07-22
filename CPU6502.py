@@ -776,9 +776,13 @@ class CPU6502(object):
             ptrPtr = (struct.unpack("<H", ins[1:3])[0])
             memoryPtr = self.memory[ptrPtr]+(self.memory[ptrPtr+1]<<8)
         elif memtype == MEM_INDIRECT_X:
-            pass
+            #val = PEEK(PEEK((arg + X) % 256) + PEEK((arg + X + 1) % 256) * 256)	
+            arg = ord(ins[1])
+            memoryPtr = self.memory[(arg + self.regX.V)&0xFF] + (self.memory[(arg + self.regX.V + 1)&0xFF]*256)
         elif memtype == MEM_INDIRECT_Y:
-            pass
+            # val = PEEK(PEEK(arg) + PEEK((arg + 1) % 256) * 256 + Y)
+            arg = ord(ins[1])
+            memoryPtr = self.memory[arg] + (self.memory[(arg + 1)&0xFF]*256) + self.regY.V 
 
        
         #Load in Memory if it's reffereneced...

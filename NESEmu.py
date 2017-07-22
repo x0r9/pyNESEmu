@@ -201,8 +201,15 @@ class NESEmu(object):
         memoryOffset += PRG_size
         print "PRGROM size: "+str(len(self.PRGROM))
         self.CHRROM = sfile[memoryOffset:memoryOffset+CHR_size]
-        print "Reset Vector {0:02X} {1:02X}".format(ord(self.PRGROM[0xFFFC-0x8000]),ord(self.PRGROM[0xFFFD-0x8000]))
         print "CHRROM size: "+str(len(self.CHRROM))
+        readResetIndexA = 0xFFFC-0x8000
+        readResetIndexB = 0xFFFD-0x8000
+        if len(self.PRGROM) <= readResetIndexB:
+            #Error loading Reset Index?
+            print "Reset Vector: Unable to read?"
+        else:    
+            print "Reset Vector {0:02X} {1:02X}".format(ord(self.PRGROM[0xFFFC-0x8000]),ord(self.PRGROM[0xFFFD-0x8000]))
+        
         
         
         self.mem_cart.InitWithString(self.PRGROM)
