@@ -33,14 +33,34 @@ class TestCPUStatusReg(unittest.TestCase):
         """
         Test Setting and unsetting of Interupt Disable flag...
         """
-        loadBin(self.cpu, "\x78\x00")
+        # Set with SEI
+        loadBin(self.cpu, "\x78\x00") 
         self.assertFalse( self.cpu.flagInterruptDisable.V)
         self.cpu.Tick()
         self.assertTrue( self.cpu.flagInterruptDisable.V)
-        loadBin(self.cpu, "\x58\x00")
+        
+        # Disable with CLI
+        loadBin(self.cpu, "\x58\x00") 
         self.assertTrue( self.cpu.flagInterruptDisable.V)
         self.cpu.Tick()
         self.assertFalse( self.cpu.flagInterruptDisable.V)
+        
+    def test_SED(self):
+        """
+        Test setting and unsetting of Decimal mode
+        """
+        # Set with SED
+        loadBin(self.cpu, "\xF8\x00") 
+        self.assertFalse( self.cpu.flagDecimal.V)
+        self.cpu.Tick()
+        self.assertTrue( self.cpu.flagDecimal.V)
+        
+        # Disable with CLD
+        loadBin(self.cpu, "\xD8\x00") 
+        self.assertTrue( self.cpu.flagDecimal.V)
+        self.cpu.Tick()
+        self.assertFalse( self.cpu.flagDecimal.V)
+        
 
 if __name__ == '__main__':
     unittest.main()

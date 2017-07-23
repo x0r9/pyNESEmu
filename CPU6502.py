@@ -962,15 +962,18 @@ class CPU6502(object):
             pass
         elif op == OP_CLD: #clear decimal mode. (nes doesn't support decimal mode)
             self.flagDecimal.V = False
-        elif op == OP_CLI:
-            pass
+            
+        elif op == OP_CLI:#Clear interupt-dis flag
+            self.flagInterruptDisable.V = False
+            
         elif op == OP_CLV:
             pass
         elif op == OP_SEC:
             pass
-        elif op == OP_SED:
-            pass
-        elif op == OP_SEI: #Set interupt flag
+        elif op == OP_SED: #set decimal mode. (nes doesn't support decimal mode)
+            self.flagDecimal.V = True
+            
+        elif op == OP_SEI: #Set interupt-dis flag
             self.flagInterruptDisable.V = True
             
         elif op == OP_BRK: # System Functions
